@@ -3,21 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "vue-cli-service serve --open",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "chart.js": "^2.8.0",
+    "eslint-plugin-prettier": "^3.0.1",
     "vue": "^2.6.6",
-    "vue-router": "^3.0.1"
+    "vue-load-image": "^0.1.7",
+    "vue-resource": "^1.5.1",
+    "vue-router": "^3.0.1",
+    "vue-spinner": "^1.0.3"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.5.0",
     "@vue/cli-plugin-eslint": "^3.5.0",
     "@vue/cli-service": "^3.5.0",
+    "@vue/eslint-config-airbnb": "^4.0.0",
     "@vue/eslint-config-prettier": "^4.0.1",
     "babel-eslint": "^10.0.1",
     "eslint": "^5.8.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-vue": "^5.0.0",
     "vue-template-compiler": "^2.5.21"
   }
