@@ -5,11 +5,15 @@
       :loading="loading"
       :size="size"
     ></ring-loader>
-    <h1>COINS</h1>
+    <h1>CRYPTOCURRENCY</h1>
     <div class="search_info">
       <div>
         <span><strong>Search</strong></span>
-        <input v-model="coins.search" type="text" placeholder="search coin" />
+        <input
+          v-model="coins.search"
+          type="text"
+          placeholder="search by name"
+        />
       </div>
       <div>
         <span><strong>Items on page</strong></span>
@@ -24,6 +28,13 @@
         />
       </div>
       <div>
+        <span><strong>Sorting order</strong></span>
+        <select v-model="coins.sortiMethod">
+          <option value="ascending" selected>ASCENDING</option>
+          <option value="descending">DESCENDING</option>
+        </select>
+      </div>
+      <div>
         <span><strong>Sort by:</strong></span>
         <select v-model="coins.sorti">
           <option value="nothing" selected></option>
@@ -33,30 +44,30 @@
           <option value="coingeckoRank">COINGESCKO RANK</option>
         </select>
       </div>
-      <div>
-        <span><strong>Sorting order</strong></span>
-        <select v-model="coins.sortiMethod">
-          <option value="ascending" selected>ASCENDING</option>
-          <option value="descending">DESCENDING</option>
-        </select>
-      </div>
     </div>
     <table>
       <thead>
         <tr>
-          <td>IMAGE</td>
-          <td>ID</td>
-          <td>NAME</td>
-          <td>MARKET RANK</td>
-          <td>COINGESCKO RANK</td>
-          <td>HOMEPAGE</td>
+          <th class="tdImage">IMAGE</th>
+          <th class="tdId">ID</th>
+          <th class="tdName">NAME</th>
+          <th class="tdMarket">MARKET RANK</th>
+          <th class="tdCoingecko">COINGESCKO RANK</th>
+          <th class="tdHomepage">HOMEPAGE</th>
+          <th class="tdLink"></th>
         </tr>
       </thead>
-      <tbody>
+      <transition-group
+        name="zoom"
+        enter-active-class="zoomInLeft"
+        leave-active-class="zoomOutRight"
+        :duration="{ enter: 1000, leave: 500 }"
+        tag="tbody"
+      >
         <tr v-for="coin in filterCoins" :key="coin.id">
-          <td>
+          <td class="tdImage">
             <router-link :to="'/coin/' + coin.id">
-              <vue-load-image>
+              <vue-load-image class="image">
                 <img slot="image" :src="coin.image" alt="coin image" />
                 <img
                   slot="preloader"
@@ -68,22 +79,29 @@
               </vue-load-image>
             </router-link>
           </td>
-          <td>
+          <td class="tdId">
             <router-link :to="'/coin/' + coin.id">{{ coin.id }}</router-link>
           </td>
-          <td>
+          <td class="tdName">
             <router-link :to="'/coin/' + coin.id">{{ coin.name }}</router-link>
           </td>
-          <td>{{ coin.marketRank }}</td>
-          <td>{{ coin.coingeckoRank }}</td>
-          <td>
+          <td class="tdMarket">{{ coin.marketRank }}</td>
+          <td class="tdCoingecko">{{ coin.coingeckoRank }}</td>
+          <td class="tdHomepage">
             <a :href="coin.homepage">{{ coin.homepage }}</a>
           </td>
+          <td class="tdLink">
+            <router-link :to="'/coin/' + coin.id"
+              ><i class="fas fa-arrow-alt-circle-right"></i
+            ></router-link>
+          </td>
         </tr>
-      </tbody>
+      </transition-group>
     </table>
     <div class="buttons_wrapper">
-      <button class="push_button red" @click="prev">Prev</button>
+      <button class="push_button red redFreeze hidden" @click="prev">
+        Prev
+      </button>
       <button class="push_button blue" @click="next">Next</button>
     </div>
   </div>
@@ -92,6 +110,7 @@
 <script>
 import VueLoadImage from 'vue-load-image';
 import RingLoader from 'vue-spinner/src/RingLoader.vue';
+require('vue2-animate/dist/vue2-animate.min.css');
 export default {
   components: {
     'vue-load-image': VueLoadImage,
@@ -113,7 +132,6 @@ export default {
   },
   computed: {
     filterCoins: function() {
-      console.log(this.coins.sorti);
       this.ringLoader(true);
       // filter for search
       let arr = this.coins.fullCoins.filter(e => {
@@ -162,10 +180,6 @@ export default {
         +this.coins.currentPage * +this.coins.size - +this.coins.size,
         +this.coins.size
       );
-      console.log(
-        +this.coins.currentPage * +this.coins.size - +this.coins.size,
-        +this.coins.size
-      );
       if (arr.length > 0) {
         arr.forEach(e => {
           if (!e.loadInfo) {
@@ -174,7 +188,7 @@ export default {
             this.$http
               .get(
                 // eslint-disable-next-line prettier/prettier
-                            `https://api.coingecko.com/api/v3/coins/${e.id}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`
+               `https://api.coingecko.com/api/v3/coins/${e.id}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`
               )
               .then(info => {
                 e.homepage = info.body.links.homepage[0];
@@ -186,7 +200,8 @@ export default {
                 setTimeout(() => {
                   this.ringLoader(false);
                 }, 1000);
-              });
+              })
+              .catch(error => console.log(error));
           } else {
             this.ringLoader(false);
           }
@@ -201,53 +216,48 @@ export default {
     this.$http.get('https://api.coingecko.com/api/v3/coins/list').then(data => {
       this.coins.fullCoins = data.body;
       this.coins.showCoins = data.body.slice().splice(0, 50);
-      console.log(this.coins.fullCoins);
-      console.log('showCoins', this.coins.showCoins);
       return this.coins.showCoins;
     });
-    // .then(data => {
-    //   data.forEach((e, i) => {
-    //     this.$http
-    //       .get(
-    //         // eslint-disable-next-line prettier/prettier
-    //         `https://api.coingecko.com/api/v3/coins/${ e.id }?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`
-    //       )
-    //       .then(info => {
-    //         e.homepage = info.body.links.homepage[0];
-    //         e.image = info.body.image.small;
-    //         e.marketRank = info.body.market_cap_rank;
-    //         e.coingeckoRank = info.body.coingecko_rank;
-    //         e.loadInfo = true;
-    //         if (i === 49) {
-    //           this.$forceUpdate();
-    //           setTimeout(() => {
-    //             this.loading2 = false;
-    //             this.loading = false;
-    //           }, 500);
-    //         }
-    //       });
-    //   });
-    // });
   },
   methods: {
     ringLoader: function(bool) {
       this.loading = bool;
     },
     prev: function() {
-      if (this.coins.currentPage <= 1) {
-        return false;
-      }
       this.coins.currentPage = +this.coins.currentPage - 1;
-      console.log(+this.coins.currentPage);
+      if (this.coins.currentPage <= 1) {
+        const button = document.querySelector('.redFreeze');
+        button.classList.add('hidden');
+      }
     },
     next: function() {
       this.coins.currentPage = +this.coins.currentPage + 1;
-      console.log(+this.coins.currentPage);
+      if (this.coins.currentPage > 1) {
+        const button = document.querySelector('.redFreeze');
+        button.classList.remove('hidden');
+      }
     }
   }
 };
 </script>
 <style scoped>
+#coinsList {
+  width: 100%;
+  min-width: 295px;
+}
+.tdId,
+.tdName,
+.tdMarket,
+.tdCoingecko,
+.tdHomepage {
+  width: 15%;
+}
+.tdImage {
+  width: 10%;
+}
+.tdLink {
+  width: 5%;
+}
 .search_info div {
   width: 20%;
   display: inline-block;
@@ -258,26 +268,30 @@ export default {
 .search_info div:last-child {
   margin: 0;
 }
-
 .search_info {
   width: 90%;
   margin: 50px auto;
 }
 input {
   width: 100%;
-  margin-right: 10%;
+  height: 25px;
   box-sizing: border-box;
   border: 2px solid black;
+  font-family: 'Margarine', cursive;
   border-radius: 5px;
+  background-color: #52a752;
 }
 .coinsSize {
   width: 100%;
 }
 select {
   width: 100%;
+  height: 25px;
   box-sizing: border-box;
   border: 2px solid black;
   border-radius: 5px;
+  font-family: 'Margarine', cursive;
+  background-color: #52a752;
 }
 .ring-loader {
   position: absolute;
@@ -298,13 +312,43 @@ table {
   vertical-align: middle;
   text-align: center;
   border: 2px solid black;
-  border-collapse: collapse;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border-collapse: separate;
+  border-spacing: 5px;
 }
-img {
-  width: 80%;
+.image img {
+  width: 50px;
+  height: 50px;
+  border: 1px solid white;
+  border-radius: 50px;
+  vertical-align: middle;
+  text-align: center;
 }
-td {
-  border: 1px solid black;
+td,
+th {
+  font-size: 20px;
+  height: 50px;
+  background: #b73924;
+}
+
+th {
+  font-size: 20px;
+}
+
+th:first-child {
+  border-top-left-radius: 5px;
+}
+th:last-child {
+  border-top-right-radius: 5px;
+}
+
+tr:last-child td:first-child {
+  border-bottom-left-radius: 5px;
+}
+
+tr:last-child td:last-child {
+  border-bottom-right-radius: 5px;
 }
 body {
   background-color: darkslategrey;
@@ -318,12 +362,13 @@ thead {
   width: 100px;
   height: 40px;
   text-align: center;
+  font-family: 'Margarine', cursive;
   color: #fff;
   text-decoration: none;
   line-height: 43px;
-  font-family: 'Oswald', Helvetica;
   display: inline-block;
   margin: 30px;
+  cursor: pointer;
 }
 .buttons_wrapper {
   margin: 0 auto;
@@ -342,27 +387,31 @@ thead {
   z-index: -1;
 }
 
-.push_button:active {
-  top: 5px;
-}
-.push_button:active:before {
+.redFreeze:active:before {
   top: -11px;
   bottom: -5px;
   content: '';
 }
 
+.fas {
+  font-size: 1.2em;
+}
+
+.redFreeze:active {
+  top: 5px;
+}
 .red {
   text-shadow: -1px -1px 0 #a84155;
   background: #c32f2f;
-  border: 1px solid #d25068;
-  background-image: linear-gradient(to bottom, #f66c7b, #d25068);
+  border: 1px solid #000;
+  background-image: linear-gradient(to bottom, #020202, #ff0808);
   border-radius: 5px;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset,
-    0 -1px 0 rgba(255, 255, 255, 0.1) inset, 0 4px 0 #ad4257,
+    0 -1px 0 rgba(255, 255, 255, 0.1) inset, 0 4px 0 #1e2425,
     0 4px 2px rgba(0, 0, 0, 0.5);
 }
 
-.red:hover {
+.redFreeze:hover {
   background: #f66c7b;
   background-image: linear-gradient(top, #d25068, #f66c7b);
 }
@@ -370,16 +419,100 @@ thead {
 .blue {
   text-shadow: -1px -1px 0 #2c7982;
   background: #3eacba;
-  border: 1px solid #379aa4;
-  background-image: linear-gradient(top, #48c6d4, #3eacba);
+  border: 1px solid #000;
+  background-image: linear-gradient(top, #191919, #37c137);
   border-radius: 5px;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset,
-    0 -1px 0 rgba(255, 255, 255, 0.1) inset, 0 4px 0 #338a94,
+    0 -1px 0 rgba(255, 255, 255, 0.1) inset, 0 4px 0 #1e2425,
     0 4px 2px rgba(0, 0, 0, 0.5);
+}
+
+.blue:active:before {
+  top: -11px;
+  bottom: -5px;
+  content: '';
+}
+
+.blue:active {
+  top: 5px;
 }
 
 .blue:hover {
   background: #48c6d4;
   background-image: linear-gradient(top, #3eacba, #48c6d4);
+}
+.hidden {
+  display: none;
+}
+
+@media (max-width: 830px) {
+  .tdCoingecko,
+  .tdMarket {
+    display: none;
+  }
+  td {
+    font-size: 18px;
+    height: 50px;
+  }
+}
+@media (max-width: 700px) {
+  .search_info div {
+    width: 50%;
+    display: inline-block;
+    text-align: center;
+    margin: 30px 0;
+    box-sizing: border-box;
+  }
+  input {
+    width: 90%;
+  }
+  .coinsSize {
+    width: 90%;
+  }
+  select {
+    width: 90%;
+  }
+
+  .buttons_wrapper {
+    width: 100%;
+  }
+  .push_button {
+    margin: 30px 50px;
+  }
+  .fas {
+    font-size: 2em;
+  }
+}
+@media (max-width: 600px) {
+  td {
+    font-size: 15px;
+    height: 50px;
+  }
+}
+@media (max-width: 520px) {
+  .search_info div {
+    width: 100%;
+    display: inline-block;
+    text-align: center;
+    margin: 30px auto;
+    box-sizing: border-box;
+  }
+  .search_info div:last-child {
+    margin: 30px auto;
+  }
+  .tdHomepage {
+    display: none;
+  }
+  .fas {
+    font-size: 2.5em;
+  }
+  .push_button {
+    margin: 30px 50px;
+  }
+}
+@media (max-width: 520px) {
+  .push_button {
+    margin: 30px 20px;
+  }
 }
 </style>

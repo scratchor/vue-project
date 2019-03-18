@@ -14,7 +14,8 @@
     "vue-load-image": "^0.1.7",
     "vue-resource": "^1.5.1",
     "vue-router": "^3.0.1",
-    "vue-spinner": "^1.0.3"
+    "vue-spinner": "^1.0.3",
+    "vue2-animate": "^2.1.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.5.0",

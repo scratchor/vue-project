@@ -5,7 +5,7 @@
       :loading="loading"
       :size="size"
     ></ring-loader>
-    <h1>404 ERROR</h1>
+    <h1>Upsss.. 404 ERROR</h1>
     <p>Page not found..</p>
     <vue-load-image class="image">
       <img slot="image" :src="this.image" alt="pitty cat" />
@@ -74,5 +74,17 @@ img {
   top: 30%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+@media (max-width: 700px) {
+  .image {
+    width: 70%;
+    height: 300px;
+  }
+}
+@media (max-width: 500px) {
+  .image {
+    width: 68%;
+    height: 200px;
+  }
 }
 </style>

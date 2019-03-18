@@ -16,15 +16,22 @@
       />
       <div slot="error">Image Error</div>
     </vue-load-image>
-    <div class="chart">
-      <canvas id="myChart1"></canvas>
-    </div>
-    <div class="chart">
-      <canvas id="myChart2"></canvas>
-    </div>
-    <div class="chart">
-      <canvas id="myChart3"></canvas>
-    </div>
+    <transition name="fade">
+      <div v-if="buildChart">
+        <div class="chart">
+          <canvas id="myChart1"></canvas>
+        </div>
+        <div class="chart">
+          <canvas id="myChart2"></canvas>
+        </div>
+        <div class="chart">
+          <canvas id="myChart3"></canvas>
+        </div>
+      </div>
+      <div v-else>
+        <h1>Sorry, coingecko API doesn't have enough information..</h1>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -47,7 +54,10 @@ export default {
       totalVolume: [],
       image: '',
       loading: true,
-      size: '200px'
+      size: '200px',
+      checkArr: [],
+      buildChartsArr: [],
+      buildChart: true
     };
   },
   computed: {},
@@ -78,21 +88,63 @@ export default {
           }/history?date=01-${e}-${twelveYear[i]}&localization=false`
         )
         .then(data => {
-          console.log(data.body);
-          this.currentPrices[i] =
-            Math.trunc(data.body.market_data.current_price.usd * 10000) / 10000;
-          this.marketCap[i] = Math.round(data.body.market_data.market_cap.usd);
-          this.totalVolume[i] = Math.round(
-            data.body.market_data.total_volume.usd
-          );
+          this.checkArr.push('ready');
+          if (data.body.market_data) {
+            this.currentPrices[i] =
+              Math.trunc(data.body.market_data.current_price.usd * 10000) /
+              10000;
+            this.marketCap[i] = Math.round(
+              data.body.market_data.market_cap.usd
+            );
+            this.totalVolume[i] = Math.round(
+              data.body.market_data.total_volume.usd
+            );
+          }
           this.image = data.body.image.small;
           this.name = data.body.name;
-          console.log(this._data);
-          if (this.currentPrices.length >= 2) {
-            setTimeout(() => {
-              this.buildCharts();
-              this.ringLoader(false);
-            }, 2000);
+          if (this.checkArr.length >= 5) {
+            let marketCap = [];
+            this.marketCap.forEach((e, i) => {
+              if (e !== undefined) {
+                marketCap[i] = i;
+                if (marketCap[i - 1] && marketCap[i - 1] !== undefined) {
+                  this.buildChartsArr[0] = this.buildChartsCap;
+                }
+              }
+            });
+            let totalVolume = [];
+            this.totalVolume.forEach((e, i) => {
+              if (e !== undefined) {
+                totalVolume[i] = i;
+                if (totalVolume[i - 1] && totalVolume[i - 1] !== undefined) {
+                  this.buildChartsArr[1] = this.buildChartsVolume;
+                }
+              }
+            });
+            let currentPrices = [];
+            this.totalVolume.forEach((e, i) => {
+              if (e !== undefined) {
+                currentPrices[i] = i;
+                if (
+                  currentPrices[i - 1] &&
+                  currentPrices[i - 1] !== undefined
+                ) {
+                  this.buildChartsArr[2] = this.buildChartsPrices;
+                }
+              }
+            });
+            if (this.buildChartsArr.length > 0) {
+              this.buildChart = true;
+              setTimeout(() => {
+                this.buildCharts();
+                this.ringLoader(false);
+              }, 1000);
+            } else {
+              this.buildChart = false;
+              setTimeout(() => {
+                this.ringLoader(false);
+              }, 500);
+            }
           }
         })
         .catch(error => console.log(error));
@@ -103,12 +155,15 @@ export default {
       this.loading = bool;
     },
     buildCharts: function() {
-      Chart.defaults.global.defaultFontFamily = 'Lato';
+      Chart.defaults.global.defaultFontFamily = 'Margarine';
       Chart.defaults.global.defaultFontSize = 15;
       Chart.defaults.global.defaultFontColor = '#777';
-      const ctx1 = document.getElementById('myChart1').getContext('2d');
-      const ctx2 = document.getElementById('myChart2');
-      const ctx3 = document.getElementById('myChart3');
+      this.buildChartsArr.forEach(e => {
+        e();
+      });
+    },
+    buildChartsCap: function() {
+      const ctx1 = document.getElementById('myChart1');
       new Chart(ctx1, {
         type: 'line',
         data: {
@@ -126,6 +181,8 @@ export default {
           ]
         },
         options: {
+          defaultFontFamily: (Chart.defaults.global.defaultFontFamily =
+            'Margarine'),
           legend: {
             display: true,
             labels: {
@@ -134,6 +191,9 @@ export default {
           }
         }
       });
+    },
+    buildChartsVolume: function() {
+      const ctx2 = document.getElementById('myChart2');
       new Chart(ctx2, {
         type: 'line',
         data: {
@@ -157,6 +217,9 @@ export default {
           }
         }
       });
+    },
+    buildChartsPrices: function() {
+      const ctx3 = document.getElementById('myChart3');
       new Chart(ctx3, {
         type: 'line',
         data: {
@@ -196,10 +259,33 @@ h1 {
 .image {
   text-align: center;
 }
+.image img {
+  border: 1px solid whitesmoke;
+  border-radius: 50px;
+}
 .ring-loader {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition-property: opacity;
+  transition-duration: 0.3s;
+}
+
+.fade-enter-active {
+  transition-delay: 0.25s;
+}
+
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+@media (max-width: 800px) {
+  .chart {
+    width: 100%;
+  }
 }
 </style>

@@ -1,15 +1,13 @@
 <template>
   <div id="app">
-    <router-view></router-view>
+    <transition name="fade">
+      <router-view class="router"></router-view>
+    </transition>
   </div>
 </template>
 
 <script>
-import coinsList from './components/coinsList.vue';
 export default {
-  components: {
-    'coins-list': coinsList
-  },
   data() {
     return {};
   },
@@ -18,7 +16,20 @@ export default {
 };
 </script>
 <style>
-body {
-  background-color: darkslategrey;
+@import url('https://fonts.googleapis.com/css?family=Margarine');
+#app {
+  width: 100%;
 }
+body,
+html {
+  background-color: darkslategrey;
+  width: 100%;
+  margin: 0;
+  font-family: 'Margarine', cursive;
+}
+::placeholder {
+  color: #000;
+  opacity: 1;
+}
+
 </style>
