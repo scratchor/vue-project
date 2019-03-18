@@ -40,8 +40,6 @@
           <option value="nothing" selected></option>
           <option value="id">ID</option>
           <option value="name">NAME</option>
-          <option value="marketRank">MARKET RANK</option>
-          <option value="coingeckoRank">COINGESCKO RANK</option>
         </select>
       </div>
     </div>
