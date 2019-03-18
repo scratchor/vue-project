@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import coinList from './components/coinsList.vue';
 import coinStats from './components/coinStats.vue';
+import Error from './components/Error.vue';
 
 Vue.use(Router);
 
@@ -11,13 +12,18 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'home',
+      name: 'list',
       component: coinList
     },
     {
       path: '/coin/:id',
-      name: 'home',
+      name: 'coin',
       component: coinStats
+    },
+    {
+      path: '/*',
+      name: '404 Error',
+      component: Error
     }
   ]
 });
